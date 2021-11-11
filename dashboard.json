@@ -1,0 +1,9 @@
+[
+  {
+    "name": "temperature",
+    "type": "float",
+    "direction": "display",
+    "display": "graph",
+    "xaxis": 20
+  }
+]
