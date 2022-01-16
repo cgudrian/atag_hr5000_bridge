@@ -1,9 +1,12 @@
 [
   {
-    "name": "temperature",
-    "type": "float",
-    "direction": "display",
-    "display": "graph",
-    "xaxis": 20
+    "name": "address_bytes",
+    "type": "uint32_t",
+    "direction": "display"
+  },
+  {
+    "name": "data_bytes",
+    "type": "uint32_t",
+    "direction": "display"
   }
 ]

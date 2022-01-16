@@ -14,8 +14,31 @@
     "hidden": true
   },
   {
-    "name": "huxlgrimmraschid",
-    "type": "bool",
-    "value": true
+    "name": "influxdbUrl",
+    "label": "InfluxDB URL",
+    "type": "char",
+    "length": 64,
+    "value": "http://example.com:8086"
+  },
+  {
+    "name": "influxdbOrg",
+    "label": "InfluxDB Organization",
+    "type": "char",
+    "length": 32,
+    "value": "my-org"
+  },
+  {
+    "name": "influxdbToken",
+    "label": "InfluxDB Token",
+    "type": "char",
+    "length": 128,
+    "value": "my-secret-token"
+  },
+  {
+    "name": "influxdbBucket",
+    "label": "InfluxDB Bucket",
+    "type": "char",
+    "length": 32,
+    "value": "esp8266"
   }
 ]
