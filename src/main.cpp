@@ -22,9 +22,7 @@ static constexpr int RS485_DI = 13;
 static constexpr int RS485_RO = 14;
 
 SoftwareSerial RS485;
-
 InfluxDBClient client;
-Point sensor("wifi_status");
 
 void setup()
 {
@@ -36,6 +34,7 @@ void setup()
 
   Serial.begin(115200);
   RS485.begin(9600, SWSERIAL_8S1, RS485_RO, RS485_DI, false);
+  RS485.setTimeout(10);
 
   LittleFS.begin();
   GUI.begin();
@@ -49,13 +48,28 @@ void setup()
       configManager.data.influxdbBucket,
       configManager.data.influxdbToken);
 
-  timeSync(TZ_INFO, "de.pool.ntp.org", "pool.ntp.org");
+  configManager.setConfigSaveCallback([]()
+                                      { client.setConnectionParams(
+                                            configManager.data.influxdbUrl,
+                                            configManager.data.influxdbOrg,
+                                            configManager.data.influxdbBucket,
+                                            configManager.data.influxdbToken); });
 
-  sensor.addTag("device", "ESP8266");
-  sensor.addTag("SSID", WiFi.SSID());
+  timeSync(TZ_INFO, "de.pool.ntp.org", "pool.ntp.org");
 
   digitalWrite(LED_BUILTIN_AUX, LOW);
   Serial.println("Ready");
+}
+
+uint8_t buffer[64];
+
+void influxWrite(Point &p)
+{
+  if (!client.writePoint(p))
+  {
+    Serial.print("InfluxDB Client error: ");
+    Serial.println(client.getLastErrorMessage());
+  }
 }
 
 void loop()
@@ -65,35 +79,38 @@ void loop()
   configManager.loop();
   dash.loop();
 
-  sensor.clearFields();
-
-#if 0
-  while (RS485.available())
+  if (auto bytesRead = RS485.readBytes(buffer, sizeof(buffer)))
   {
-    uint8_t c = RS485.read();
-    if (RS485.readParity())
+    if (buffer[0] == 0x41 && bytesRead == 30)
     {
-      dash.data.address_bytes += 1;
-      Serial.printf("\n*%02x", c);
-    }
-    else
-    {
-      dash.data.data_bytes += 1;
-      Serial.printf(" %02x", c);
+      Point packet("packet");
+      packet.addField("size", bytesRead);
+      influxWrite(packet);
+
+      Point raw("raw");
+      raw.addTag("index", String(buffer[18]));
+      raw.addField("val0", buffer[19]);
+      raw.addField("val1", buffer[20]);
+      raw.addField("val2", buffer[21]);
+      raw.addField("val3", buffer[22]);
+      raw.addField("val4", buffer[23]);
+      raw.addField("val5", buffer[24]);
+      raw.addField("val6", buffer[25]);
+      raw.addField("val7", buffer[26]);
+      influxWrite(raw);
+
+      switch (buffer[18])
+      {
+      case 0x3:
+        Point temperatures("temperatures");
+        temperatures.addField("vorlauf", buffer[19]);
+        temperatures.addField("rücklauf", buffer[20]);
+        temperatures.addField("warmwasser", buffer[21]);
+        temperatures.addField("außen", static_cast<int8_t>(buffer[22]));
+        temperatures.addField("abgas", buffer[23]);
+        influxWrite(temperatures);
+        break;
+      }
     }
   }
-#else
-  sensor.addField("rssi", WiFi.RSSI());
-
-  Serial.print("Writing: ");
-  Serial.println(sensor.toLineProtocol());
-
-  if (!client.writePoint(sensor))
-  {
-    Serial.print("InfluxDB write failed: ");
-    Serial.println(client.getLastErrorMessage());
-  }
-
-  delay(10000);
-#endif
 }
