@@ -46,7 +46,9 @@ void setup()
     GUI.begin();
     configManager.begin();
     dash.begin();
+
     WiFiManager.begin(configManager.data.projectName);
+    WiFi.setAutoConnect(true);
 
     applyConfiguration();
     configManager.setConfigSaveCallback(applyConfiguration);
