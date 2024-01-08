@@ -26,6 +26,9 @@ void applyConfiguration()
                                configManager.data.influxdbOrg,
                                configManager.data.influxdbBucket,
                                configManager.data.influxdbToken);
+
+    if (strlen(configManager.data.hostname))
+        WiFi.setHostname(configManager.data.hostname);
 }
 
 void setup()
