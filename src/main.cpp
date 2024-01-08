@@ -47,7 +47,7 @@ void setup()
     configManager.begin();
     dash.begin();
 
-    WiFiManager.begin(configManager.data.projectName);
+    WiFiManager.begin("ATAG Bridge");
     WiFi.setAutoConnect(true);
 
     applyConfiguration();
