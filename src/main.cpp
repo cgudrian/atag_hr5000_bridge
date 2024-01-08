@@ -139,7 +139,7 @@ void loop()
     configManager.loop();
     dash.loop();
 
-    if (auto newDumperClient = Dumper.available())
+    if (auto newDumperClient = Dumper.accept())
         dumperClient = newDumperClient;
 
     while (RS485.available()) {
