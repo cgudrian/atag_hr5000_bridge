@@ -46,5 +46,25 @@
     "type": "char",
     "length": 32,
     "value": "esp8266"
+  },
+  {
+    "name": "mqttBrokerHost",
+    "label": "MQTT Broker IP",
+    "type": "char",
+    "length": 64,
+    "value": "mqtt.broker"
+  },
+  {
+    "name": "mqttBrokerPort",
+    "label": "MQTT Broker Port",
+    "type": "uint16_t",
+    "value": 1883
+  },
+  {
+    "name": "hostname",
+    "label": "Hostname",
+    "type": "char",
+    "length": 64,
+    "value": ""
   }
 ]
