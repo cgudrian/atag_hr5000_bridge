@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.inc": "bitbake",
+			"*.conf": "bitbake",
+			"defconfig": "properties",
+			"*.mak": "makefile",
+			"*.leex": "html-eex",
+			"*.eex": "html-eex",
+			"*.tcc": "cpp",
+			"iosfwd": "cpp",
+			"istream": "cpp",
+			"limits": "cpp",
+			"sstream": "cpp",
+			"streambuf": "cpp",
+			"ostream": "cpp",
+			"regex": "cpp"
+		}
+	}
+}
