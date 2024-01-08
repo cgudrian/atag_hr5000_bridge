@@ -10,7 +10,6 @@
 #include "webServer.h"
 #include "WiFiManager.h"
 
-
 #define TZ_INFO "CET-1CEST,M3.5.0,M10.5.0/3"
 
 static constexpr int RS485_DE = 12;
