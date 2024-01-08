@@ -19,7 +19,7 @@
     "label": "Hostname",
     "type": "char",
     "length": 64,
-    "value": ""
+    "value": "atagbridge"
   },
   {
     "name": "packetTimeout",
