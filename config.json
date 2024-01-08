@@ -49,7 +49,7 @@
   },
   {
     "name": "mqttBrokerHost",
-    "label": "MQTT Broker IP",
+    "label": "MQTT Broker Host",
     "type": "char",
     "length": 64,
     "value": "mqtt.broker"
