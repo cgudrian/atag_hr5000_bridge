@@ -4,7 +4,8 @@
     "label": "Project Name",
     "type": "char",
     "length": 32,
-    "value": "ESP8266 IoT Framework"
+    "value": "ATAG Bridge",
+    "hidden": true
   },
   {
     "name": "language",
@@ -14,10 +15,17 @@
     "hidden": true
   },
   {
+    "name": "hostname",
+    "label": "Hostname",
+    "type": "char",
+    "length": 64,
+    "value": ""
+  },
+  {
     "name": "packetTimeout",
     "label": "Packet Timeout",
     "type": "uint32_t",
-    "value": 10
+    "value": 100
   },
   {
     "name": "influxdbUrl",
@@ -59,12 +67,5 @@
     "label": "MQTT Broker Port",
     "type": "uint16_t",
     "value": 1883
-  },
-  {
-    "name": "hostname",
-    "label": "Hostname",
-    "type": "char",
-    "length": 64,
-    "value": ""
   }
 ]
