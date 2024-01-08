@@ -1,16 +1,14 @@
 #include <Arduino.h>
+
+#include <configManager.h>
+#include <dashboard.h>
 #include <InfluxDbClient.h>
 #include <LittleFS.h>
 #include <MQTT.h>
 #include <SoftwareSerial.h>
-
-#include <ranges>
-
-#include "configManager.h"
-#include "dashboard.h"
-#include "updater.h"
-#include "webServer.h"
-#include "WiFiManager.h"
+#include <updater.h>
+#include <webServer.h>
+#include <WiFiManager.h>
 
 // TODO: turn into configuration option
 #define TZ_INFO "CET-1CEST,M3.5.0,M10.5.0/3"
