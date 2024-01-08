@@ -1,8 +1,10 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
-#include "LittleFS.h"
-
 #include <InfluxDbClient.h>
+#include <LittleFS.h>
+#include <MQTT.h>
+#include <SoftwareSerial.h>
+
+#include <ranges>
 
 #include "configManager.h"
 #include "dashboard.h"
@@ -10,17 +12,18 @@
 #include "webServer.h"
 #include "WiFiManager.h"
 
+// TODO: turn into configuration option
 #define TZ_INFO "CET-1CEST,M3.5.0,M10.5.0/3"
 
 static constexpr int RS485_DE = 12;
 static constexpr int RS485_DI = 13;
 static constexpr int RS485_RO = 14;
 
-SoftwareSerial RS485;
-InfluxDBClient Influx;
-WiFiServer Dumper(4711);
+static SoftwareSerial RS485;
+static InfluxDBClient Influx;
+static WiFiServer Dumper(4711);
 
-void applyConfiguration()
+static void applyConfiguration()
 {
     Influx.setConnectionParams(configManager.data.influxdbUrl,
                                configManager.data.influxdbOrg,
@@ -61,12 +64,7 @@ void setup()
     Serial.println("Ready");
 }
 
-size_t packetSize;
-uint8_t buffer[128];
-unsigned long lastByteTime;
-bool readingPacket;
-
-void influxWrite(Point& p)
+static void influxWrite(Point& p)
 {
     if (!Influx.writePoint(p)) {
         Serial.print("InfluxDB Client error: ");
@@ -74,9 +72,14 @@ void influxWrite(Point& p)
     }
 }
 
-WiFiClient dumperClient;
+static WiFiClient dumperClient;
 
-void processPacket()
+static size_t packetSize;
+static uint8_t buffer[128];
+static unsigned long lastByteTime;
+static bool readingPacket;
+
+static void processPacket()
 {
     if (packetSize < 2)
         return;
@@ -140,7 +143,7 @@ void loop()
     dash.loop();
 
     if (auto newDumperClient = Dumper.accept())
-        dumperClient = newDumperClient;
+        dumperClient = std::move(newDumperClient);
 
     while (RS485.available()) {
         auto b = RS485.read();
