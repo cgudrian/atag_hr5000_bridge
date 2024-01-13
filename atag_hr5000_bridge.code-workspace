@@ -12,6 +12,8 @@
 			"*.mak": "makefile",
 			"*.leex": "html-eex",
 			"*.eex": "html-eex",
+			"*.svelte": "svelte",
+			"*.md": "markdown",
 			"*.tcc": "cpp",
 			"iosfwd": "cpp",
 			"istream": "cpp",
@@ -19,7 +21,8 @@
 			"sstream": "cpp",
 			"streambuf": "cpp",
 			"ostream": "cpp",
-			"regex": "cpp"
+			"regex": "cpp",
+			"type_traits": "cpp"
 		}
 	}
 }
