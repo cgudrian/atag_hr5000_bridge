@@ -14,8 +14,6 @@
 
 #include "Integrator.h"
 
-// TODO: turn into configuration option
-#define TZ_INFO "CET-1CEST,M3.5.0,M10.5.0/3"
 
 #ifndef MQTT_PREFIX
 #define MQTT_PREFIX "atagbridge"
@@ -138,7 +136,7 @@ void setup()
 
     Dumper.begin();
 
-    timeSync(TZ_INFO, "de.pool.ntp.org", "pool.ntp.org");
+    timeSync(configManager.data.timezone, "de.pool.ntp.org", "pool.ntp.org");
 
     mqtt.begin(net);
     mqttConnect();
