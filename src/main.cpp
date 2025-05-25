@@ -13,7 +13,7 @@
 #include <map>
 
 #include "Integrator.h"
-
+#include "AtagPacketProcessor.h"
 
 #ifndef MQTT_PREFIX
 #define MQTT_PREFIX "atagbridge"
@@ -33,30 +33,20 @@ static WiFiClient net;
 
 static auto const& cfg = configManager.data;
 
-namespace topics {
-static char const* const online = MQTT_PREFIX "/online";
-static char const* const flowTemperature = MQTT_PREFIX "/temperature/flow";
-static char const* const returnTemperature = MQTT_PREFIX "/temperature/return";
-static char const* const differenceTemperature = MQTT_PREFIX "/temperature/difference";
-static char const* const hotWaterTemperature = MQTT_PREFIX "/temperature/hotwater";
-static char const* const outsideTemperature = MQTT_PREFIX "/temperature/outside";
-static char const* const exhaustTemperature = MQTT_PREFIX "/temperature/exhaust";
-static char const* const nominalTemperature = MQTT_PREFIX "/temperature/nominal";
-static char const* const pressure = MQTT_PREFIX "/pressure";
-static char const* const power = MQTT_PREFIX "/power";
-static char const* const energy = MQTT_PREFIX "/energy";
-static char const* const state = MQTT_PREFIX "/state";
-static char const* const pump = MQTT_PREFIX "/toggles/pump";
-static char const* const heating = MQTT_PREFIX "/toggles/heating";
-static char const* const hotwater = MQTT_PREFIX "/toggles/hotwater";
-}  // namespace topics
+// Packet processor for handling ATAG protocol data
+static AtagPacketProcessor* packetProcessor = nullptr;
+
+// MQTT topics are now handled by AtagPacketProcessor
+namespace {
+    constexpr const char* onlineTopic = MQTT_PREFIX "/online";
+}
 
 static void mqttConnect()
 {
     Serial.print("Connecting to MQTT broker...");
     if (mqtt.connect(cfg.hostname)) {
         Serial.println("OK.");
-        mqtt.publish(topics::online, "1", true, 1);
+        mqtt.publish(onlineTopic, "1", true, 1);
     } else {
         Serial.println("FAILED.");
     }
@@ -64,7 +54,7 @@ static void mqttConnect()
 
 static void mqttDisconnect()
 {
-    mqtt.publish(topics::online, "0", true, 1);
+    mqtt.publish(onlineTopic, "0", true, 1);
     mqtt.clearWill();
     mqtt.disconnect();
 }
@@ -86,7 +76,7 @@ static void applyConfiguration()
     if (lastHostname != cfg.hostname) {
         Serial.print("Hostname...");
         mqttDisconnect();
-        mqtt.setWill(topics::online, "0", 1, true);
+        mqtt.setWill(onlineTopic, "0", 1, true);
         WiFi.setHostname(cfg.hostname);
     }
 
@@ -141,6 +131,9 @@ void setup()
     mqtt.begin(net);
     mqttConnect();
 
+    // Initialize packet processor
+    packetProcessor = new AtagPacketProcessor(mqtt, Influx, MAX_POWER);
+
     digitalWrite(LED_BUILTIN_AUX, LOW);
     Serial.println("Ready.");
 }
@@ -159,10 +152,6 @@ static size_t packetSize;
 static uint8_t buffer[128];
 static unsigned long lastByteTime;
 static bool readingPacket;
-
-// Integrator class moved to Integrator.h/.cpp
-
-static Integrator powerToEnergy;
 
 static void processPacket()
 {
@@ -184,89 +173,9 @@ static void processPacket()
         influxWrite(packet);
     }
 
-    if (buffer[0] == 0x41 && packetSize == 30) {
-        int8_t* val = reinterpret_cast<int8_t*>(&buffer[19]);
-
-        Point raw("raw");
-        raw.addTag("index", String(buffer[18]));
-        for (int i = 0; i < 8; ++i)
-            raw.addField(String("val") + i, val[i]);
-        influxWrite(raw);
-
-        switch (buffer[18]) {
-            case 0x3: {
-                Point temperatures("temperatures");
-                temperatures.addField("vorlauf", val[0]);
-                temperatures.addField("rücklauf", val[1]);
-                temperatures.addField("warmwasser", val[2]);
-                temperatures.addField("außen", static_cast<int8_t>(val[3]));
-                temperatures.addField("abgas", val[4]);
-                influxWrite(temperatures);
-
-                mqtt.publish(topics::flowTemperature, String(val[0]));
-                mqtt.publish(topics::returnTemperature, String(val[1]));
-                mqtt.publish(topics::differenceTemperature, String(val[0] - val[1]));
-                mqtt.publish(topics::hotWaterTemperature, String(val[2]));
-                mqtt.publish(topics::outsideTemperature, String(val[3]));
-                mqtt.publish(topics::exhaustTemperature, String(val[4]));
-                mqtt.publish(topics::nominalTemperature, String(val[7]));
-
-                break;
-            }
-
-            case 0x4: {
-                static std::map<uint8_t, char const*> VALUE_MAP = {
-                    {0, "AUS"},
-                    {1, "LZ"},
-                    {2, "ZZ"},
-                    {3, "HB"},
-                    {4, "WW"},
-                    {5, "KV"},
-                    {6, "RT"},
-                    {7, "NH"},
-                    {8, "NW"},
-                    {9, "KT"},
-                };
-
-                auto v = val[6];
-                auto s = VALUE_MAP[v];
-                if (s)
-                    mqtt.publish(topics::state, s);
-                else
-                    mqtt.publish(topics::state, String(v));
-
-                break;
-            }
-
-            case 0x6: {
-                Point pressures("pressures");
-                auto p = val[7] / 10.0f;
-                pressures.addField("anlage", p, 1);
-                influxWrite(pressures);
-
-                mqtt.publish(topics::pressure, String(p));
-
-                break;
-            }
-
-            case 0x7: {
-                // power
-                auto power = MAX_POWER * val[6] / 100.0f;
-                mqtt.publish(topics::power, String(power));
-
-                // integrate and convert to kWh
-                auto energy = powerToEnergy.update(power) / 3600.0f;
-                mqtt.publish(topics::energy, String(energy));
-
-                // operation state
-                auto bits = val[7];
-                mqtt.publish(topics::pump, String((bits & 1) ? 1 : 0));
-                mqtt.publish(topics::heating, String((bits & 2) ? 1 : 0));
-                mqtt.publish(topics::hotwater, String((bits & 4) ? 1 : 0));
-                break;
-            }
-        }
-    } else if (buffer[0] == 0x71 && packetSize == 41) {
+    // Use the packet processor to handle data extraction and publishing
+    if (packetProcessor) {
+        packetProcessor->processPacket(buffer, packetSize);
     }
 }
 
