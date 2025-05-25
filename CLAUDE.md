@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Git Configuration
+
+- **Main branch for PRs**: `claude` (not `master`)
+- Always target the `claude` branch when creating pull requests
+
 ## Build and Development Commands
 
 - Build project: `platformio run`
