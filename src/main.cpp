@@ -12,6 +12,8 @@
 
 #include <map>
 
+#include "Integrator.h"
+
 // TODO: turn into configuration option
 #define TZ_INFO "CET-1CEST,M3.5.0,M10.5.0/3"
 
@@ -160,32 +162,7 @@ static uint8_t buffer[128];
 static unsigned long lastByteTime;
 static bool readingPacket;
 
-class Integrator {
-  public:
-    float update(float value)
-    {
-        auto now = millis();
-
-        if (!firstTime) {
-            auto deltaT = (now - lastT) / 1000.0;
-            // integration with linear interpolation
-            result += 0.5 * (lastValue + value) * deltaT;
-        } else {
-            firstTime = false;
-        }
-
-        lastValue = value;
-        lastT = now;
-
-        return result;
-    }
-
-  private:
-    bool firstTime{true};
-    decltype(millis()) lastT{};
-    float lastValue{};
-    float result{};
-};
+// Integrator class moved to Integrator.h/.cpp
 
 static Integrator powerToEnergy;
 

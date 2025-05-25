@@ -43,6 +43,10 @@ This is an ESP8266-based bridge that interfaces with ATAG HR5000 heating systems
 - MQTT: Message broker communication
 - SoftwareSerial: RS485 communication
 
+### Key Classes
+
+- **Integrator** (`src/Integrator.h/.cpp`): Power-to-energy integration using trapezoidal rule
+
 ### Configuration Files
 
 - `config.json`: Runtime configuration schema (hostname, MQTT broker, InfluxDB credentials)
