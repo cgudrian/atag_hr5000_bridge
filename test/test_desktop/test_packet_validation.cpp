@@ -3,42 +3,14 @@
 #include <stddef.h>
 #include <chrono>
 
-// Mock Arduino types for testing
-using millis_t = decltype(std::chrono::duration_cast<std::chrono::milliseconds>(
-    std::chrono::system_clock::now().time_since_epoch()).count());
+// Include the extracted Integrator class
+#ifndef UNIT_TEST
+#define UNIT_TEST
+#endif
+#include "../../src/Integrator.h"
 
-// Integrator class for testing
-class Integrator {
-public:
-    float update(float value, millis_t currentTime) {
-        if (!firstTime) {
-            auto deltaT = (currentTime - lastT) / 1000.0;
-            result += 0.5 * (lastValue + value) * deltaT;
-        } else {
-            firstTime = false;
-        }
-
-        lastValue = value;
-        lastT = currentTime;
-
-        return result;
-    }
-
-    float getResult() const { return result; }
-    
-    void reset() {
-        firstTime = true;
-        lastT = 0;
-        lastValue = 0;
-        result = 0;
-    }
-
-private:
-    bool firstTime{true};
-    millis_t lastT{};
-    float lastValue{};
-    float result{};
-};
+// Include implementation for testing (since PlatformIO test doesn't build src/ files)
+#include "../../src/Integrator.cpp"
 
 // ATAG protocol constants
 static constexpr uint8_t ATAG_ADDRESS_0x41 = 0x41;
