@@ -1,11 +1,15 @@
 Import("env")
 import os
-import shutil
+import subprocess
 
 def apply_patches(source, target, env):
     """Apply patches to fix ArduinoJson deprecation warnings in ESP8266 IoT Framework"""
     project_dir = env.get("PROJECT_DIR", ".")
     libdeps_base = os.path.join(project_dir, ".pio", "libdeps")
+    patch_file = os.path.join(project_dir, "patches", "esp8266-iot-framework-fix-arduinojson.patch")
+    
+    if not os.path.exists(patch_file):
+        return
     
     if os.path.exists(libdeps_base):
         for env_name in os.listdir(libdeps_base):
@@ -20,20 +24,19 @@ def apply_patches(source, target, env):
                         content = f.read()
                     
                     # Only patch if we find deprecated code
-                    if 'StaticJsonDocument' in content or 'createNestedArray(' in content:
+                    if 'StaticJsonDocument' in content:
                         print("Applying ArduinoJson deprecation fixes to ESP8266 IoT Framework...")
                         
-                        # Apply the fixes
-                        content = content.replace('StaticJsonDocument<200>', 'JsonDocument')
-                        content = content.replace('StaticJsonDocument<1000>', 'JsonDocument') 
-                        content = content.replace('StaticJsonDocument<100>', 'JsonDocument')
-                        content = content.replace('jsonBuffer.createNestedArray("files")', 'jsonBuffer["files"].to<JsonArray>()')
-                        
-                        # Write the patched file
-                        with open(webserver_file, 'w') as f:
-                            f.write(content)
-                        
-                        print("ArduinoJson deprecation fixes applied successfully!")
+                        # Apply the patch file
+                        try:
+                            result = subprocess.run([
+                                'patch', '-p1', '-d', framework_path, '-i', patch_file
+                            ], capture_output=True, text=True, check=True)
+                            print("ArduinoJson deprecation fixes applied successfully!")
+                        except subprocess.CalledProcessError as e:
+                            print(f"Patch failed: {e}")
+                            print(f"stdout: {e.stdout}")
+                            print(f"stderr: {e.stderr}")
                         break
 
 # Apply patches before any compilation starts
