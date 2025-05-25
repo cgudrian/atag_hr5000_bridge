@@ -13,6 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Upload to device: `platformio run --target upload`
 - Monitor serial output: `platformio device monitor`
 - Clean build: `platformio run --target clean`
+- **Run tests**: `platformio test -e test`
 
 ## Project Architecture
 
