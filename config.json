@@ -67,5 +67,12 @@
     "label": "MQTT Broker Port",
     "type": "uint16_t",
     "value": 1883
+  },
+  {
+    "name": "timezone",
+    "label": "Timezone",
+    "type": "char",
+    "length": 64,
+    "value": "CET-1CEST,M3.5.0,M10.5.0/3"
   }
 ]
